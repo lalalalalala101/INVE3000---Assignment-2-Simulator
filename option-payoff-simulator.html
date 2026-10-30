@@ -1,0 +1,2644 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option Payoff Simulator | Interactive Straddle &amp; Strangle Visualizer</title>
+  <meta name="description" content="Interactive options profit and loss visualizer with Black-Scholes pricing, IV sensitivity analysis, and real-time straddle and strangle payoff curves.">
+  <meta property="og:title" content="Option Payoff Simulator | Interactive Straddle &amp; Strangle Visualizer">
+  <meta property="og:description" content="Interactive options profit and loss visualizer with Black-Scholes pricing, IV sensitivity analysis, and real-time straddle and strangle payoff curves.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --color-primary: #2563eb;
+      --color-primary-hover: #1d4ed8;
+      --color-purple: #7c3aed;
+      --color-purple-hover: #6d28d9;
+      --color-success: #16a34a;
+      --color-danger: #dc2626;
+      --color-warning: #ea580c;
+      --color-neutral-zero: #94a3b8;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding: 24px 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Top Header Bar */
+    header {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-title-group h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      background: #eff6ff;
+      color: var(--color-primary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      border: 1px solid #bfdbfe;
+    }
+
+    .header-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      outline: none;
+      user-select: none;
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: #334155;
+      border-color: #cbd5e1;
+    }
+
+    .btn-secondary:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-hover);
+    }
+
+    /* Main Grid Layout */
+    .simulator-grid {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .simulator-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 12px;
+    }
+
+    /* Scenario Quick Preset Buttons */
+    .scenario-buttons-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 6px;
+      margin-bottom: 16px;
+    }
+
+    .scenario-btn {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--radius-sm);
+      padding: 9px 10px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      outline: none;
+    }
+
+    .scenario-btn:hover {
+      background: #eff6ff;
+      border-color: var(--color-primary);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .scenario-btn:active {
+      transform: translateY(0);
+    }
+
+    .scenario-btn.active {
+      background: #dbeafe;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .scenario-btn-title {
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .scenario-btn-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* Controls Panel */
+    .control-group {
+      margin-bottom: 18px;
+    }
+
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .control-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #334155;
+    }
+
+    /* Text Input Boxes Next to Sliders */
+    .control-input-wrapper {
+      display: inline-flex;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--radius-sm);
+      padding: 2px 7px;
+      transition: all 0.15s ease;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .control-input-wrapper:hover {
+      border-color: #94a3b8;
+    }
+
+    .control-input-wrapper:focus-within {
+      background: #ffffff;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+    }
+
+    .control-input-wrapper.highlight-warning:focus-within {
+      border-color: var(--color-warning);
+      box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.18);
+    }
+
+    .control-input-prefix,
+    .control-input-suffix {
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: #64748b;
+      user-select: none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .control-num-input {
+      width: 78px;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: var(--color-primary);
+      text-align: right;
+      padding: 1px 3px;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    .control-num-input::-webkit-outer-spin-button,
+    .control-num-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .control-num-input:focus {
+      outline: none;
+      color: #0f172a;
+    }
+
+    .select-dropdown {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid #cbd5e1;
+      background-color: #ffffff;
+      color: var(--text-main);
+      font-size: 0.925rem;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .select-dropdown:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    /* Range Sliders */
+    .slider-input {
+      width: 100%;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      outline: none;
+      margin: 8px 0 4px 0;
+      cursor: pointer;
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      border: 2px solid #ffffff;
+      transition: transform 0.1s ease, background 0.15s ease;
+    }
+
+    .slider-input::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: var(--color-primary-hover);
+    }
+
+    .slider-input::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      cursor: pointer;
+      border: 2px solid #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .slider-limits {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.725rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Section divider */
+    .control-divider {
+      height: 1px;
+      background-color: #f1f5f9;
+      margin: 18px 0;
+    }
+
+    .section-subtitle {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Right column: Canvases & Stats */
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Stats Panel Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: box-shadow 0.15s ease;
+    }
+
+    .stat-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-title {
+      font-size: 0.775rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .stat-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .text-profit {
+      color: var(--color-success);
+    }
+
+    .text-loss {
+      color: var(--color-danger);
+    }
+
+    .text-neutral {
+      color: #475569;
+    }
+
+    /* Chart Container Card */
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px 24px 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .chart-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .legend-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: #475569;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-color-line {
+      width: 18px;
+      height: 3px;
+      border-radius: 2px;
+    }
+
+    .legend-line-blue {
+      background: var(--color-primary);
+    }
+
+    .legend-line-purple {
+      background: var(--color-purple);
+    }
+
+    .legend-line-grey {
+      border-top: 2px dashed var(--color-neutral-zero);
+      height: 0;
+    }
+
+    .legend-line-orange {
+      border-top: 2px dashed var(--color-warning);
+      height: 0;
+    }
+
+    .legend-dot-red {
+      width: 9px;
+      height: 9px;
+      background: var(--color-danger);
+      border-radius: 50%;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 380px;
+      background: #ffffff;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .canvas-container-secondary {
+      height: 320px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    /* Canvas floating hover tooltip */
+    .chart-tooltip {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      background: rgba(15, 23, 42, 0.92);
+      color: #ffffff;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      box-shadow: var(--shadow-md);
+      z-index: 10;
+      white-space: nowrap;
+      transform: translate(-50%, -120%);
+    }
+
+    /* Strategy details info box */
+    .strategy-info-banner {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: #334155;
+    }
+
+    .strategy-icon {
+      color: var(--color-primary);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .strategy-formula {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 600;
+      color: #1e293b;
+      margin-top: 4px;
+      font-size: 0.8rem;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 0.775rem;
+      color: var(--text-muted);
+    }
+  </style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas-pro@2.0.4"></script><style>.aistudio-hover-highlight { box-shadow: inset 0 0 0 0.5px white, inset 0 0 0 1.5px rgba(128,128,128,0.6) !important; }.aistudio-active-highlight { outline: 2px solid #87a9ff !important; outline-offset: -2px !important; box-shadow: 0 0 0 0.5px rgba(0,0,0,0.3), inset 0 0 0 0.5px rgba(0,0,0,0.3) !important; }.aistudio-generating-blur { filter: blur(5px) grayscale(100%) brightness(28%) !important; transition: filter 0.3s ease; }#aistudio-focus-mode-tag { position: absolute; display: none; align-items: center; gap: 4px; background: #87a9ff; border-radius: 12px; z-index: 10000; padding: 8px; color: #32302c; font-family: Inter, sans-serif; font-size: 14px; font-style: normal; font-weight: 500; line-height: 21px; pointer-events: none; }#aistudio-hover-mode-tag { position: absolute; display: none; align-items: center; gap: 4px; background: rgba(128,128,128,0.6); border-radius: 12px; z-index: 10000; padding: 8px; color: white; font-family: Inter, sans-serif; font-size: 14px; font-style: normal; font-weight: 500; line-height: 21px; pointer-events: none; }.aistudio-img-icon { display: none; vertical-align: middle; pointer-events: auto; cursor: pointer; }.aistudio-img-icon.visible { display: inline-flex; }#aistudio-focus-mode-tag .aistudio-img-icon { position: relative; width: 26px; height: 26px; background: #32302c; border-radius: 6px; margin: -4px -4px -4px 0; }#aistudio-focus-mode-tag .aistudio-img-icon::before { content: ""; position: absolute; top: 4px; left: 4px; width: 18px; height: 18px; background-color: white; -webkit-mask-image: url("https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/edit_fix_auto/default/24px.svg"); -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; mask-image: url("https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/edit_fix_auto/default/24px.svg"); mask-size: contain; mask-repeat: no-repeat; }#aistudio-hover-mode-tag .aistudio-img-icon { position: relative; width: 18px; height: 18px; margin-left: 4px; }#aistudio-hover-mode-tag .aistudio-img-icon::before { content: ""; position: absolute; top: 0; left: 0; width: 18px; height: 18px; background-color: white; -webkit-mask-image: url("https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/edit_fix_auto/default/24px.svg"); -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; mask-image: url("https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/edit_fix_auto/default/24px.svg"); mask-size: contain; mask-repeat: no-repeat; }#aistudio-focus-mode-tag .aistudio-img-icon:hover, #aistudio-hover-mode-tag .aistudio-img-icon:hover { background: #424242 !important; }#aistudio-focus-mode-tag .aistudio-img-icon:active, #aistudio-hover-mode-tag .aistudio-img-icon:active { background: #393f51 !important; }</style><style type="text/css" data-vite-dev-id="/app/applet/src/index.css">/*! tailwindcss v4.3.3 | MIT License | https://tailwindcss.com */
+@layer properties;
+@layer theme, base, components, utilities;
+@layer theme {
+  :root, :host {
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji";
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+      "Courier New", monospace;
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --default-transition-duration: 150ms;
+    --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    --default-font-family: var(--font-sans);
+    --default-mono-font-family: var(--font-mono);
+  }
+}
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0 solid;
+  }
+  html, :host {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    font-family: var(--default-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");
+    font-feature-settings: var(--default-font-feature-settings, normal);
+    font-variation-settings: var(--default-font-variation-settings, normal);
+    -webkit-tap-highlight-color: transparent;
+  }
+  hr {
+    height: 0;
+    color: inherit;
+    border-top-width: 1px;
+  }
+  abbr:where([title]) {
+    -webkit-text-decoration: underline dotted;
+    text-decoration: underline dotted;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  a {
+    color: inherit;
+    -webkit-text-decoration: inherit;
+    text-decoration: inherit;
+  }
+  b, strong {
+    font-weight: bolder;
+  }
+  code, kbd, samp, pre {
+    font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+    font-feature-settings: var(--default-mono-font-feature-settings, normal);
+    font-variation-settings: var(--default-mono-font-variation-settings, normal);
+    font-size: 1em;
+  }
+  small {
+    font-size: 80%;
+  }
+  sub, sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+  sub {
+    bottom: -0.25em;
+  }
+  sup {
+    top: -0.5em;
+  }
+  table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+  }
+  :-moz-focusring:where(:not(iframe)) {
+    outline: auto;
+  }
+  progress {
+    vertical-align: baseline;
+  }
+  summary {
+    display: list-item;
+  }
+  ol, ul, menu {
+    list-style: none;
+  }
+  img, svg, video, canvas, audio, iframe, embed, object {
+    display: block;
+    vertical-align: middle;
+  }
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
+  button, input, select, optgroup, textarea, ::file-selector-button {
+    font: inherit;
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    border-radius: 0;
+    background-color: transparent;
+    opacity: 1;
+  }
+  :where(select:is([multiple], [size])) optgroup {
+    font-weight: bolder;
+  }
+  :where(select:is([multiple], [size])) optgroup option {
+    padding-inline-start: 20px;
+  }
+  ::file-selector-button {
+    margin-inline-end: 4px;
+  }
+  ::placeholder {
+    opacity: 1;
+  }
+  @supports (not (-webkit-appearance: -apple-pay-button))  or (contain-intrinsic-size: 1px) {
+    ::placeholder {
+      color: currentcolor;
+      @supports (color: color-mix(in lab, red, red)) {
+        color: color-mix(in oklab, currentcolor 50%, transparent);
+      }
+    }
+  }
+  textarea {
+    resize: vertical;
+  }
+  ::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+  ::-webkit-date-and-time-value {
+    min-height: 1lh;
+    text-align: inherit;
+  }
+  ::-webkit-datetime-edit {
+    display: inline-flex;
+  }
+  ::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+  }
+  ::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field {
+    padding-block: 0;
+  }
+  ::-webkit-calendar-picker-indicator {
+    line-height: 1;
+  }
+  :-moz-ui-invalid {
+    box-shadow: none;
+  }
+  button, input:where([type="button"], [type="reset"], [type="submit"]), ::file-selector-button {
+    appearance: button;
+  }
+  ::-webkit-inner-spin-button, ::-webkit-outer-spin-button {
+    height: auto;
+  }
+  [hidden]:where(:not([hidden="until-found"])) {
+    display: none !important;
+  }
+}
+@layer utilities {
+  .collapse {
+    visibility: collapse;
+  }
+  .fixed {
+    position: fixed;
+  }
+  .container {
+    width: 100%;
+    @media (width >= 40rem) {
+      max-width: 40rem;
+    }
+    @media (width >= 48rem) {
+      max-width: 48rem;
+    }
+    @media (width >= 64rem) {
+      max-width: 64rem;
+    }
+    @media (width >= 80rem) {
+      max-width: 80rem;
+    }
+    @media (width >= 96rem) {
+      max-width: 96rem;
+    }
+  }
+  .block {
+    display: block;
+  }
+  .flex-shrink {
+    flex-shrink: 1;
+  }
+  .transform {
+    transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
+  }
+  .resize {
+    resize: both;
+  }
+  .flex-wrap {
+    flex-wrap: wrap;
+  }
+  .border {
+    border-style: var(--tw-border-style);
+    border-width: 1px;
+  }
+  .outline {
+    outline-style: var(--tw-outline-style);
+    outline-width: 1px;
+  }
+  .blur {
+    --tw-blur: blur(8px);
+    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
+  }
+  .transition {
+    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay, pointer-events;
+    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+    transition-duration: var(--tw-duration, var(--default-transition-duration));
+  }
+}
+@property --tw-rotate-x {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-rotate-y {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-rotate-z {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-skew-x {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-skew-y {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-border-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
+@property --tw-outline-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
+@property --tw-blur {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-brightness {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-contrast {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-grayscale {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-hue-rotate {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-invert {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-opacity {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-saturate {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-sepia {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-drop-shadow-size {
+  syntax: "*";
+  inherits: false;
+}
+@layer properties {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
+    *, ::before, ::after, ::backdrop {
+      --tw-rotate-x: initial;
+      --tw-rotate-y: initial;
+      --tw-rotate-z: initial;
+      --tw-skew-x: initial;
+      --tw-skew-y: initial;
+      --tw-border-style: solid;
+      --tw-outline-style: solid;
+      --tw-blur: initial;
+      --tw-brightness: initial;
+      --tw-contrast: initial;
+      --tw-grayscale: initial;
+      --tw-hue-rotate: initial;
+      --tw-invert: initial;
+      --tw-opacity: initial;
+      --tw-saturate: initial;
+      --tw-sepia: initial;
+      --tw-drop-shadow: initial;
+      --tw-drop-shadow-color: initial;
+      --tw-drop-shadow-alpha: 100%;
+      --tw-drop-shadow-size: initial;
+    }
+  }
+}
+</style></head>
+<body data-new-gr-c-s-check-loaded="14.1338.0" data-gr-ext-installed="">
+  <!-- Root container for React if needed -->
+  
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-title-group">
+        <h1>
+          Option Payoff Simulator
+          <span class="header-badge" id="strategyBadge">Long Straddle</span>
+        </h1>
+        <p class="header-subtitle">
+          Interactive real-time options profit &amp; loss analyzer with Black-Scholes volatility pricing and IV sensitivity.
+        </p>
+      </div>
+      <div class="header-actions">
+        <button id="btnReset" class="btn btn-secondary" title="Reset all sliders to sensible defaults" fdprocessedid="45gype">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+          Reset Defaults
+        </button>
+        <button id="btnDownload" class="btn btn-primary" title="Download standalone offline HTML file" fdprocessedid="s7iood">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Download HTML File
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <div class="simulator-grid">
+      <!-- Left Column: Sliders & Controls -->
+      <aside class="card">
+        <div class="card-title">
+          <span>Parameters &amp; Setup</span>
+        </div>
+
+        <!-- Example Scenario Quick Buttons -->
+        <div class="control-header">
+          <label class="control-label" style="font-weight: 600; color: #1e293b;">Example Scenarios</label>
+        </div>
+        <div class="scenario-buttons-grid">
+          <button type="button" class="scenario-btn" id="btnScenarioMyEvent" title="Load realistic earnings event setup" fdprocessedid="ia4os">
+            <span class="scenario-btn-title">My Event</span>
+            <span class="scenario-btn-sub">IV 45% • Target $108</span>
+          </button>
+          <button type="button" class="scenario-btn" id="btnScenarioHighIV" title="Load High Implied Volatility (80%)" fdprocessedid="aw0ngs">
+            <span class="scenario-btn-title">High IV</span>
+            <span class="scenario-btn-sub">IV = 80%</span>
+          </button>
+          <button type="button" class="scenario-btn" id="btnScenarioLowIV" title="Load Low Implied Volatility (20%)" fdprocessedid="mkl39m">
+            <span class="scenario-btn-title">Low IV</span>
+            <span class="scenario-btn-sub">IV = 20%</span>
+          </button>
+          <button type="button" class="scenario-btn" id="btnScenarioVolCrush" title="Post-event volatility collapse (80% → 30%)" fdprocessedid="zj4nui">
+            <span class="scenario-btn-title">Volatility Crush</span>
+            <span class="scenario-btn-sub">80% → 30% IV</span>
+          </button>
+        </div>
+
+        <!-- Strategy Selector Dropdown -->
+        <div class="control-group">
+          <div class="control-header">
+            <label for="strategySelect" class="control-label">Strategy Selector</label>
+          </div>
+          <select id="strategySelect" class="select-dropdown" fdprocessedid="enkxoq">
+            <option value="long-straddle" selected="">Long Straddle</option>
+            <option value="long-strangle">Long Strangle</option>
+            <option value="short-straddle">Short Straddle</option>
+            <option value="short-strangle">Short Strangle</option>
+          </select>
+        </div>
+
+        <div class="control-divider"></div>
+        <div class="section-subtitle">Stock &amp; Volatility</div>
+
+        <!-- Current Stock Price Slider & Text Box -->
+        <div class="control-group">
+          <div class="control-header">
+            <label for="currentPrice" class="control-label">Current Stock Price</label>
+            <div class="control-input-wrapper">
+              <span class="control-input-prefix">$</span>
+              <input type="number" step="any" min="0" id="currentPriceInput" class="control-num-input" value="100.00" aria-label="Current Stock Price" autocomplete="off" fdprocessedid="10g4gy">
+            </div>
+          </div>
+          <input type="range" id="currentPrice" class="slider-input" min="0" max="300" step="0.01" value="100">
+          <div class="slider-limits">
+            <span>$0</span>
+            <span>$300</span>
+          </div>
+        </div>
+
+        <!-- Implied Volatility Slider & Text Box (1% to 200%) -->
+        <div class="control-group">
+          <div class="control-header">
+            <label for="ivSlider" class="control-label">Implied Volatility (IV)</label>
+            <div class="control-input-wrapper">
+              <input type="number" step="any" min="1" max="200" id="ivInput" class="control-num-input" value="30.00" aria-label="Implied Volatility" autocomplete="off" fdprocessedid="k4xx2r">
+              <span class="control-input-suffix">%</span>
+            </div>
+            <span id="ivVal" style="display:none;">30.00%</span>
+          </div>
+          <input type="range" id="ivSlider" class="slider-input" min="1" max="200" step="0.01" value="30.00">
+          <div class="slider-limits">
+            <span>1%</span>
+            <span>200%</span>
+          </div>
+        </div>
+
+        <!-- Future Stock Price Slider & Text Box -->
+        <div class="control-group">
+          <div class="control-header">
+            <label for="futurePrice" class="control-label">Future Stock Price (At Expiry S_T)</label>
+            <div class="control-input-wrapper highlight-warning">
+              <span class="control-input-prefix" style="color: var(--color-warning);">$</span>
+              <input type="number" step="any" min="0" id="futurePriceInput" class="control-num-input" style="color: var(--color-warning);" value="100.00" aria-label="Future Stock Price" autocomplete="off" fdprocessedid="ki2uvu">
+            </div>
+          </div>
+          <input type="range" id="futurePrice" class="slider-input" min="0" max="200" step="0.01" value="100">
+          <div class="slider-limits">
+            <span id="futurePriceMin">$0</span>
+            <span id="futurePriceMax">$200.00</span>
+          </div>
+        </div>
+
+        <div class="control-divider"></div>
+        <div class="section-subtitle">Options Strikes &amp; Black-Scholes Premiums</div>
+
+        <!-- Call Strike Slider & Text Box -->
+        <div class="control-group">
+          <div class="control-header">
+            <label for="callStrike" class="control-label">Call Strike (Kc)</label>
+            <div class="control-input-wrapper">
+              <span class="control-input-prefix">$</span>
+              <input type="number" step="any" min="0" id="callStrikeInput" class="control-num-input" value="100.00" aria-label="Call Strike" autocomplete="off" fdprocessedid="clg1al">
+            </div>
+          </div>
+          <input type="range" id="callStrike" class="slider-input" min="0" max="300" step="0.01" value="100">
+          <div class="slider-limits">
+            <span>$0</span>
+            <span>$300</span>
+          </div>
+        </div>
+
+        <!-- Put Strike Slider & Text Box -->
+        <div class="control-group">
+          <div class="control-header">
+            <label for="putStrike" class="control-label">Put Strike (Kp)</label>
+            <div class="control-input-wrapper">
+              <span class="control-input-prefix">$</span>
+              <input type="number" step="any" min="0" id="putStrikeInput" class="control-num-input" value="100.00" aria-label="Put Strike" autocomplete="off" fdprocessedid="yl2iey">
+            </div>
+          </div>
+          <input type="range" id="putStrike" class="slider-input" min="0" max="300" step="0.01" value="100">
+          <div class="slider-limits">
+            <span>$0</span>
+            <span>$300</span>
+          </div>
+        </div>
+
+        <!-- Call Premium Slider & Text Box -->
+        <div class="control-group">
+          <div class="control-header">
+            <label for="callPremium" class="control-label">Call Premium (Pc)</label>
+            <div class="control-input-wrapper">
+              <span class="control-input-prefix">$</span>
+              <input type="number" step="any" min="0" id="callPremiumInput" class="control-num-input" value="3.65" aria-label="Call Premium" autocomplete="off" fdprocessedid="aa2y3q">
+            </div>
+          </div>
+          <input type="range" id="callPremium" class="slider-input" min="0" max="50.00" step="0.01" value="3.63">
+          <div class="slider-limits">
+            <span>$0.00</span>
+            <span>$50.00</span>
+          </div>
+        </div>
+
+        <!-- Put Premium Slider & Text Box -->
+        <div class="control-group">
+          <div class="control-header">
+            <label for="putPremium" class="control-label">Put Premium (Pp)</label>
+            <div class="control-input-wrapper">
+              <span class="control-input-prefix">$</span>
+              <input type="number" step="any" min="0" id="putPremiumInput" class="control-num-input" value="3.20" aria-label="Put Premium" autocomplete="off" fdprocessedid="hs0viq">
+            </div>
+          </div>
+          <input type="range" id="putPremium" class="slider-input" min="0" max="50.00" step="0.01" value="3.22">
+          <div class="slider-limits">
+            <span>$0.00</span>
+            <span>$50.00</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Column: Visual Diagrams & Stats -->
+      <main class="right-column">
+        <!-- Stats Summary Cards -->
+        <div class="stats-grid">
+          <!-- Profit at Future Price -->
+          <div class="stat-card">
+            <span class="stat-title">Profit at S_T Price</span>
+            <span id="statFutureProfit" class="stat-value text-loss">-$6.85</span>
+            <span id="statFuturePriceSub" class="stat-sub">At $100.00 share price</span>
+          </div>
+
+          <!-- Maximum Profit -->
+          <div class="stat-card">
+            <span class="stat-title">Maximum Profit</span>
+            <span id="statMaxProfit" class="stat-value text-profit">Unlimited</span>
+            <span id="statMaxProfitSub" class="stat-sub">Uncapped upside potential</span>
+          </div>
+
+          <!-- Maximum Loss -->
+          <div class="stat-card">
+            <span class="stat-title">Maximum Loss</span>
+            <span id="statMaxLoss" class="stat-value text-loss">-$6.85</span>
+            <span id="statMaxLossSub" class="stat-sub">Capped at premium paid ($6.85)</span>
+          </div>
+
+          <!-- Breakeven Points -->
+          <div class="stat-card">
+            <span class="stat-title">Breakeven Values</span>
+            <span id="statBreakevens" class="stat-value text-neutral">$93.15 / $106.85</span>
+            <span id="statBreakevensSub" class="stat-sub">Lower &amp; Upper BE price</span>
+          </div>
+        </div>
+
+        <!-- Chart 1: Expiry Payoff Diagram Chart -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h2 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);">Expiry Payoff Curve</h2>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                Visualizing net profit/loss ($) per share vs. future underlying price at expiration (0 to 2× current price).
+              </p>
+            </div>
+            <div class="legend-group">
+              <div class="legend-item">
+                <span class="legend-color-line legend-line-blue"></span>
+                <span>Payoff</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color-line legend-line-grey"></span>
+                <span>Zero P/L</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot-red"></span>
+                <span>Breakeven</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color-line legend-line-orange"></span>
+                <span>Future Price Marker (S_T)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="canvas-container" id="canvasContainer">
+            <canvas id="payoffCanvas" width="838" height="475"></canvas>
+            <div id="chartTooltip" class="chart-tooltip" style="display: none;"></div>
+          </div>
+        </div>
+
+        <!-- Chart 2: P/L as a Function of Implied Volatility -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h2 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);">Profit / Loss vs. Implied Volatility</h2>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                Holding stock price fixed at future stock price (<span id="ivChartPriceTag" style="font-weight: 600; color: var(--color-warning);">$100.00</span>). X-axis = IV from 1% to 200%.
+              </p>
+            </div>
+            <div class="legend-group">
+              <div class="legend-item">
+                <span class="legend-color-line legend-line-purple"></span>
+                <span>P/L vs IV</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color-line legend-line-grey"></span>
+                <span>Zero P/L</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot-red"></span>
+                <span>Breakeven IV</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color-line legend-line-orange"></span>
+                <span>Selected IV Marker</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="canvas-container canvas-container-secondary" id="ivCanvasContainer">
+            <canvas id="ivCanvas" width="838" height="400"></canvas>
+            <div id="ivChartTooltip" class="chart-tooltip" style="display: none;"></div>
+          </div>
+        </div>
+
+        <!-- Strategy Formula & Description Banner -->
+        <div class="strategy-info-banner">
+          <div class="strategy-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </div>
+          <div>
+            <div id="strategyDescTitle" style="font-weight: 600; color: #1e293b;">Long Straddle (At-the-Money)</div>
+            <div id="strategyDescText" style="margin-top: 2px; color: #475569;">Profits from significant volatility in either direction. Consists of buying a Call and Put at the identical strike price (Kc = Kp). Higher IV increases premium cost, requiring larger moves to breakeven.</div>
+            <div id="strategyFormula" class="strategy-formula">Payoff = max(S − Kc, 0) + max(Kp − S, 0) − (Pc + Pp)</div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <footer>
+      Option Payoff Simulator • Vanilla JavaScript • Self-Contained Offline Application
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // --- Black-Scholes Standard Constants ---
+      const T_EXPIRY = 30 / 365; // 30 days / 365 as specified
+      const RISK_FREE_RATE = 0.05; // 5% risk-free rate as specified
+
+      // --- DOM Elements: Sliders ---
+      const strategySelect = document.getElementById('strategySelect');
+      const strategyBadge = document.getElementById('strategyBadge');
+
+      const currentPriceSlider = document.getElementById('currentPrice');
+      const ivSlider = document.getElementById('ivSlider');
+      const futurePriceSlider = document.getElementById('futurePrice');
+      const futurePriceMin = document.getElementById('futurePriceMin');
+      const futurePriceMax = document.getElementById('futurePriceMax');
+      const callStrikeSlider = document.getElementById('callStrike');
+      const putStrikeSlider = document.getElementById('putStrike');
+      const callPremiumSlider = document.getElementById('callPremium');
+      const putPremiumSlider = document.getElementById('putPremium');
+
+      // --- DOM Elements: Text Input Boxes next to each slider ---
+      const currentPriceInput = document.getElementById('currentPriceInput');
+      const ivInput = document.getElementById('ivInput');
+      const futurePriceInput = document.getElementById('futurePriceInput');
+      const callStrikeInput = document.getElementById('callStrikeInput');
+      const putStrikeInput = document.getElementById('putStrikeInput');
+      const callPremiumInput = document.getElementById('callPremiumInput');
+      const putPremiumInput = document.getElementById('putPremiumInput');
+
+      // Setup ID Aliases so queries for legacy *Val IDs or *Input resolve to the text input elements
+      const idAliasMap = {
+        currentPriceVal: 'currentPriceInput',
+        ivVal: 'ivInput',
+        futurePriceVal: 'futurePriceInput',
+        callStrikeVal: 'callStrikeInput',
+        putStrikeVal: 'putStrikeInput',
+        callPremiumVal: 'callPremiumInput',
+        putPremiumVal: 'putPremiumInput',
+        currentPriceText: 'currentPriceInput',
+        ivText: 'ivInput',
+        futurePriceText: 'futurePriceInput',
+        callStrikeText: 'callStrikeInput',
+        putStrikeText: 'putStrikeInput',
+        callPremiumText: 'callPremiumInput',
+        putPremiumText: 'putPremiumInput'
+      };
+
+      const originalGetElementById = Document.prototype.getElementById;
+      Document.prototype.getElementById = function (id) {
+        const el = originalGetElementById.call(this, id);
+        if (el) return el;
+        if (idAliasMap[id]) {
+          return originalGetElementById.call(this, idAliasMap[id]);
+        }
+        return null;
+      };
+
+      const originalQuerySelector = Document.prototype.querySelector;
+      Document.prototype.querySelector = function (selectors) {
+        const el = originalQuerySelector.call(this, selectors);
+        if (el) return el;
+        if (selectors && selectors.startsWith('#')) {
+          const stripped = selectors.slice(1);
+          if (idAliasMap[stripped]) {
+            return originalGetElementById.call(this, idAliasMap[stripped]);
+          }
+        }
+        return null;
+      };
+
+      const btnReset = document.getElementById('btnReset');
+      const btnDownload = document.getElementById('btnDownload');
+
+      // Scenario Buttons
+      const btnScenarioMyEvent = document.getElementById('btnScenarioMyEvent');
+      const btnScenarioHighIV = document.getElementById('btnScenarioHighIV');
+      const btnScenarioLowIV = document.getElementById('btnScenarioLowIV');
+      const btnScenarioVolCrush = document.getElementById('btnScenarioVolCrush');
+      const allScenarioBtns = [btnScenarioMyEvent, btnScenarioHighIV, btnScenarioLowIV, btnScenarioVolCrush];
+
+      // Stats Elements
+      const statFutureProfit = document.getElementById('statFutureProfit');
+      const statFuturePriceSub = document.getElementById('statFuturePriceSub');
+      const statMaxProfit = document.getElementById('statMaxProfit');
+      const statMaxProfitSub = document.getElementById('statMaxProfitSub');
+      const statMaxLoss = document.getElementById('statMaxLoss');
+      const statMaxLossSub = document.getElementById('statMaxLossSub');
+      const statBreakevens = document.getElementById('statBreakevens');
+      const statBreakevensSub = document.getElementById('statBreakevensSub');
+
+      const strategyDescTitle = document.getElementById('strategyDescTitle');
+      const strategyDescText = document.getElementById('strategyDescText');
+      const strategyFormula = document.getElementById('strategyFormula');
+      const ivChartPriceTag = document.getElementById('ivChartPriceTag');
+
+      // Chart 1: Payoff Canvas
+      const canvas1 = document.getElementById('payoffCanvas');
+      const ctx1 = canvas1.getContext('2d');
+      const tooltip1 = document.getElementById('chartTooltip');
+      let hoverX1 = null;
+      let hoverY1 = null;
+
+      // Chart 2: IV Canvas
+      const canvas2 = document.getElementById('ivCanvas');
+      const ctx2 = canvas2.getContext('2d');
+      const tooltip2 = document.getElementById('ivChartTooltip');
+      let hoverX2 = null;
+      let hoverY2 = null;
+
+      // Standard normal cumulative distribution approximation
+      function stdNormalCDF(x) {
+        const a1 = 0.254829592;
+        const a2 = -0.284496736;
+        const a3 = 1.421413741;
+        const a4 = -1.453152027;
+        const a5 = 1.061405429;
+        const p = 0.3275911;
+
+        const sign = x < 0 ? -1 : 1;
+        const absX = Math.abs(x) / Math.SQRT2;
+        const t = 1.0 / (1.0 + p * absX);
+        const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-absX * absX);
+        return 0.5 * (1.0 + sign * y);
+      }
+
+      // Robust Black-Scholes formula for Call and Put premiums handling any decimal values >= 0
+      function calculateBSPremiums(S, Kc, Kp, ivPercent, T = T_EXPIRY, r = RISK_FREE_RATE) {
+        const safeS = Math.max(0, S);
+        const safeKc = Math.max(0, Kc);
+        const safeKp = Math.max(0, Kp);
+        const sigma = Math.max(0.0001, (ivPercent || 1) / 100);
+        const safeT = Math.max(0.0001, T);
+        const sqrtT = Math.sqrt(safeT);
+
+        let callPrice = 0;
+        let putPrice = 0;
+
+        // Call option Black-Scholes
+        if (safeS <= 0 || safeKc <= 0) {
+          callPrice = Math.max(0, safeS - safeKc);
+        } else {
+          const d1Call = (Math.log(safeS / safeKc) + (r + 0.5 * sigma * sigma) * safeT) / (sigma * sqrtT);
+          const d2Call = d1Call - sigma * sqrtT;
+          callPrice = safeS * stdNormalCDF(d1Call) - safeKc * Math.exp(-r * safeT) * stdNormalCDF(d2Call);
+        }
+
+        // Put option Black-Scholes
+        if (safeKp <= 0) {
+          putPrice = 0;
+        } else if (safeS <= 0) {
+          putPrice = safeKp * Math.exp(-r * safeT);
+        } else {
+          const d1Put = (Math.log(safeS / safeKp) + (r + 0.5 * sigma * sigma) * safeT) / (sigma * sqrtT);
+          const d2Put = d1Put - sigma * sqrtT;
+          putPrice = safeKp * Math.exp(-r * safeT) * stdNormalCDF(-d2Put) - safeS * stdNormalCDF(-d1Put);
+        }
+
+        callPrice = Math.max(0, Math.round((callPrice || 0) * 100) / 100);
+        putPrice = Math.max(0, Math.round((putPrice || 0) * 100) / 100);
+
+        return { callPrice, putPrice };
+      }
+
+      // Payoff Function at Expiry across stock prices
+      function calculatePayoff(strategy, S, Kc, Kp, Pc, Pp) {
+        const callPayoff = Math.max(S - Kc, 0);
+        const putPayoff = Math.max(Kp - S, 0);
+        const longPayoff = callPayoff + putPayoff - Pc - Pp;
+
+        if (strategy === 'long-straddle' || strategy === 'long-strangle') {
+          return longPayoff;
+        } else {
+          return -longPayoff;
+        }
+      }
+
+      // Position Profit / Loss as a function of Implied Volatility
+      function calculatePnlAtIV(strategy, fixedST, currentS, Kc, Kp, ivValPercent) {
+        const { callPrice, putPrice } = calculateBSPremiums(currentS, Kc, Kp, ivValPercent, T_EXPIRY, RISK_FREE_RATE);
+        const totalPremium = callPrice + putPrice;
+
+        const callPayoff = Math.max(fixedST - Kc, 0);
+        const putPayoff = Math.max(Kp - fixedST, 0);
+        const intrinsic = callPayoff + putPayoff;
+
+        const isLong = strategy === 'long-straddle' || strategy === 'long-strangle';
+        if (isLong) {
+          return intrinsic - totalPremium;
+        } else {
+          return totalPremium - intrinsic;
+        }
+      }
+
+      // Format Helpers
+      function formatMoney(num, showSign = false) {
+        if (!isFinite(num)) return 'Unlimited';
+        const absVal = Math.abs(num).toFixed(2);
+        if (showSign) {
+          if (num > 0.001) return `+$${absVal}`;
+          if (num < -0.001) return `-$${absVal}`;
+          return `$${absVal}`;
+        }
+        return `$${absVal}`;
+      }
+
+      // Strategy Descriptions
+      const strategyInfo = {
+        'long-straddle': {
+          badge: 'Long Straddle',
+          title: 'Long Straddle (At-the-Money)',
+          text: 'Profits from significant volatility in either direction. Consists of buying a Call and Put at the identical strike price (Kc = Kp). Higher IV increases premium cost, requiring larger moves to breakeven.',
+          formula: 'Payoff = max(S − Kc, 0) + max(Kp − S, 0) − (Pc + Pp)'
+        },
+        'long-strangle': {
+          badge: 'Long Strangle',
+          title: 'Long Strangle (Out-of-the-Money)',
+          text: 'Profits from very large volatility in either direction at a lower upfront cost than a straddle. Call strike is above Put strike (Kc > Kp).',
+          formula: 'Payoff = max(S − Kc, 0) + max(Kp − S, 0) − (Pc + Pp)  [where Kc > Kp]'
+        },
+        'short-straddle': {
+          badge: 'Short Straddle',
+          title: 'Short Straddle (Neutral Income)',
+          text: 'Profits from market stagnation by selling both options. Higher IV yields larger upfront premium collected (upward P/L vs IV slope), with high risk if stock moves sharply.',
+          formula: 'Payoff = (Pc + Pp) − [max(S − Kc, 0) + max(Kp − S, 0)]'
+        },
+        'short-strangle': {
+          badge: 'Short Strangle',
+          title: 'Short Strangle (Range-Bound Income)',
+          text: 'Profits from range-bound price action between the two strikes, keeping full premium. Call strike is above Put strike (Kc > Kp).',
+          formula: 'Payoff = (Pc + Pp) − [max(S − Kc, 0) + max(Kp − S, 0)]  [where Kc > Kp]'
+        }
+      };
+
+      // Update future price bounds
+      function updateFuturePriceBounds() {
+        const S0 = parseFloat(currentPriceSlider.value) || 0;
+        const maxRange = Math.max(10, Math.round(S0 * 2 * 100) / 100);
+        futurePriceSlider.max = maxRange.toString();
+        futurePriceMin.textContent = '$0';
+        futurePriceMax.textContent = `$${maxRange.toFixed(2)}`;
+
+        if (parseFloat(futurePriceSlider.value) > maxRange) {
+          futurePriceSlider.value = S0.toFixed(2);
+          if (futurePriceInput && document.activeElement !== futurePriceInput) {
+            futurePriceInput.value = S0.toFixed(2);
+          }
+        }
+      }
+
+      // Strategy change
+      function onStrategyChange(recomputeStrikes = true) {
+        const strategy = strategySelect.value;
+        const info = strategyInfo[strategy];
+
+        strategyBadge.textContent = info.badge;
+        strategyDescTitle.textContent = info.title;
+        strategyDescText.textContent = info.text;
+        strategyFormula.textContent = info.formula;
+
+        const currentPrice = parseFloat(currentPriceSlider.value) || 0;
+
+        if (recomputeStrikes) {
+          if (strategy === 'long-straddle' || strategy === 'short-straddle') {
+            callStrikeSlider.value = currentPrice.toFixed(2);
+            putStrikeSlider.value = currentPrice.toFixed(2);
+            if (callStrikeInput && document.activeElement !== callStrikeInput) {
+              callStrikeInput.value = currentPrice.toFixed(2);
+            }
+            if (putStrikeInput && document.activeElement !== putStrikeInput) {
+              putStrikeInput.value = currentPrice.toFixed(2);
+            }
+          } else {
+            const spread = Math.max(0.5, Math.round(currentPrice * 0.05 * 100) / 100);
+            const callK = Math.round((currentPrice + spread) * 100) / 100;
+            const putK = Math.max(0, Math.round((currentPrice - spread) * 100) / 100);
+            callStrikeSlider.value = callK.toFixed(2);
+            putStrikeSlider.value = putK.toFixed(2);
+            if (callStrikeInput && document.activeElement !== callStrikeInput) {
+              callStrikeInput.value = callK.toFixed(2);
+            }
+            if (putStrikeInput && document.activeElement !== putStrikeInput) {
+              putStrikeInput.value = putK.toFixed(2);
+            }
+          }
+        }
+        updatePremiumsFromIV();
+        render();
+      }
+
+      // Update premiums based on IV using Black-Scholes formula
+      function updatePremiumsFromIV() {
+        const S = parseFloat(currentPriceSlider.value) || 0;
+        const Kc = parseFloat(callStrikeSlider.value) || 0;
+        const Kp = parseFloat(putStrikeSlider.value) || 0;
+        const iv = parseFloat(ivSlider.value) || 1;
+
+        const { callPrice, putPrice } = calculateBSPremiums(S, Kc, Kp, iv, T_EXPIRY, RISK_FREE_RATE);
+
+        if (callPrice > parseFloat(callPremiumSlider.max)) {
+          callPremiumSlider.max = Math.ceil(callPrice * 1.5).toString();
+        }
+        if (putPrice > parseFloat(putPremiumSlider.max)) {
+          putPremiumSlider.max = Math.ceil(putPrice * 1.5).toString();
+        }
+
+        callPremiumSlider.value = callPrice.toFixed(2);
+        putPremiumSlider.value = putPrice.toFixed(2);
+
+        if (callPremiumInput && document.activeElement !== callPremiumInput) {
+          callPremiumInput.value = callPrice.toFixed(2);
+        }
+        if (putPremiumInput && document.activeElement !== putPremiumInput) {
+          putPremiumInput.value = putPrice.toFixed(2);
+        }
+      }
+
+      // Calculate Breakevens on stock price
+      function getBreakevens(strategy, Kc, Kp, Pc, Pp) {
+        const totalPremium = Pc + Pp;
+        const lowerBE = Kp - totalPremium;
+        const upperBE = Kc + totalPremium;
+
+        const breakevens = [];
+        if (lowerBE >= 0) {
+          breakevens.push(lowerBE);
+        }
+        breakevens.push(upperBE);
+        return breakevens.sort((a, b) => a - b);
+      }
+
+      // Update Stats Panel
+      function updateStats(strategy, currentS, futureS, Kc, Kp, Pc, Pp, breakevens) {
+        const futureProfit = calculatePayoff(strategy, futureS, Kc, Kp, Pc, Pp);
+        const totalPremium = Pc + Pp;
+        const isLong = strategy === 'long-straddle' || strategy === 'long-strangle';
+
+        statFutureProfit.textContent = formatMoney(futureProfit, true);
+        statFuturePriceSub.textContent = `At $${futureS.toFixed(2)} share price`;
+
+        if (futureProfit > 0.005) {
+          statFutureProfit.className = 'stat-value text-profit';
+        } else if (futureProfit < -0.005) {
+          statFutureProfit.className = 'stat-value text-loss';
+        } else {
+          statFutureProfit.className = 'stat-value text-neutral';
+        }
+
+        if (isLong) {
+          statMaxProfit.textContent = 'Unlimited';
+          statMaxProfit.className = 'stat-value text-profit';
+          statMaxProfitSub.textContent = 'Uncapped upside potential';
+
+          const maxLossVal = -totalPremium;
+          statMaxLoss.textContent = formatMoney(maxLossVal, true);
+          statMaxLoss.className = 'stat-value text-loss';
+          statMaxLossSub.textContent = `Capped at premium paid ($${totalPremium.toFixed(2)})`;
+        } else {
+          statMaxProfit.textContent = formatMoney(totalPremium, true);
+          statMaxProfit.className = 'stat-value text-profit';
+          statMaxProfitSub.textContent = `Capped at premium received ($${totalPremium.toFixed(2)})`;
+
+          statMaxLoss.textContent = 'Unlimited';
+          statMaxLoss.className = 'stat-value text-loss';
+          statMaxLossSub.textContent = 'Substantial breakout risk';
+        }
+
+        if (breakevens.length === 2) {
+          statBreakevens.textContent = `$${breakevens[0].toFixed(2)} / $${breakevens[1].toFixed(2)}`;
+          statBreakevensSub.textContent = 'Lower & Upper BE price';
+        } else if (breakevens.length === 1) {
+          statBreakevens.textContent = `$${breakevens[0].toFixed(2)}`;
+          statBreakevensSub.textContent = 'Single BE (Lower < 0)';
+        } else {
+          statBreakevens.textContent = 'None';
+          statBreakevensSub.textContent = 'No breakeven in range';
+        }
+      }
+
+      // --- Chart 1: Draw Payoff vs Future Stock Price ---
+      function drawPayoffChart(strategy, currentS, futureS, Kc, Kp, Pc, Pp, breakevens) {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas1.getBoundingClientRect();
+        const displayWidth = rect.width;
+        const displayHeight = rect.height;
+
+        if (canvas1.width !== displayWidth * dpr || canvas1.height !== displayHeight * dpr) {
+          canvas1.width = displayWidth * dpr;
+          canvas1.height = displayHeight * dpr;
+        }
+
+        ctx1.save();
+        ctx1.scale(dpr, dpr);
+        ctx1.clearRect(0, 0, displayWidth, displayHeight);
+
+        const margin = { top: 32, right: 36, bottom: 44, left: 64 };
+        const plotWidth = displayWidth - margin.left - margin.right;
+        const plotHeight = displayHeight - margin.top - margin.bottom;
+
+        const minX = 0;
+        const maxX = Math.max(10, currentS * 2);
+
+        const points = [];
+        const numSteps = 250;
+        let minY = 0;
+        let maxY = 0;
+
+        for (let i = 0; i <= numSteps; i++) {
+          const s = minX + (i / numSteps) * (maxX - minX);
+          const pnl = calculatePayoff(strategy, s, Kc, Kp, Pc, Pp);
+          points.push({ s, pnl });
+          if (pnl < minY) minY = pnl;
+          if (pnl > maxY) maxY = pnl;
+        }
+
+        const absExtent = Math.max(Math.abs(minY), Math.abs(maxY), Pc + Pp + 10);
+        minY = -absExtent * 1.15;
+        maxY = absExtent * 1.15;
+
+        function getCanvasX(s) {
+          return margin.left + ((s - minX) / (maxX - minX)) * plotWidth;
+        }
+
+        function getCanvasY(pnl) {
+          return margin.top + ((maxY - pnl) / (maxY - minY)) * plotHeight;
+        }
+
+        function getValFromCanvasX(x) {
+          const clampedX = Math.max(margin.left, Math.min(margin.left + plotWidth, x));
+          return minX + ((clampedX - margin.left) / plotWidth) * (maxX - minX);
+        }
+
+        // Background Grid & Ticks
+        ctx1.strokeStyle = '#f1f5f9';
+        ctx1.lineWidth = 1;
+        ctx1.fillStyle = '#64748b';
+        ctx1.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx1.textAlign = 'right';
+        ctx1.textBaseline = 'middle';
+
+        const yTicks = 6;
+        for (let i = 0; i <= yTicks; i++) {
+          const yVal = minY + (i / yTicks) * (maxY - minY);
+          const yPos = getCanvasY(yVal);
+
+          ctx1.beginPath();
+          ctx1.strokeStyle = '#f1f5f9';
+          ctx1.moveTo(margin.left, yPos);
+          ctx1.lineTo(margin.left + plotWidth, yPos);
+          ctx1.stroke();
+
+          const label = (yVal >= 0 ? '+$' : '-$') + Math.abs(Math.round(yVal));
+          ctx1.fillText(label, margin.left - 10, yPos);
+        }
+
+        ctx1.textAlign = 'center';
+        ctx1.textBaseline = 'top';
+        const xTicks = 8;
+        for (let i = 0; i <= xTicks; i++) {
+          const xVal = minX + (i / xTicks) * (maxX - minX);
+          const xPos = getCanvasX(xVal);
+
+          ctx1.beginPath();
+          ctx1.strokeStyle = '#f1f5f9';
+          ctx1.moveTo(xPos, margin.top);
+          ctx1.lineTo(xPos, margin.top + plotHeight);
+          ctx1.stroke();
+
+          ctx1.fillText(`$${Math.round(xVal)}`, xPos, margin.top + plotHeight + 8);
+        }
+
+        // Axis Titles
+        ctx1.fillStyle = '#334155';
+        ctx1.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx1.textAlign = 'center';
+        ctx1.fillText('Future Stock Price ($)', margin.left + plotWidth / 2, displayHeight - 16);
+
+        ctx1.save();
+        ctx1.translate(16, margin.top + plotHeight / 2);
+        ctx1.rotate(-Math.PI / 2);
+        ctx1.textAlign = 'center';
+        ctx1.fillText('Profit / Loss ($)', 0, 0);
+        ctx1.restore();
+
+        // Zero P/L Line
+        const zeroY = getCanvasY(0);
+        ctx1.save();
+        ctx1.beginPath();
+        ctx1.setLineDash([5, 5]);
+        ctx1.strokeStyle = '#94a3b8';
+        ctx1.lineWidth = 1.5;
+        ctx1.moveTo(margin.left, zeroY);
+        ctx1.lineTo(margin.left + plotWidth, zeroY);
+        ctx1.stroke();
+        ctx1.restore();
+
+        // Shaded Area Under Payoff Curve
+        ctx1.save();
+        ctx1.beginPath();
+        ctx1.moveTo(getCanvasX(points[0].s), zeroY);
+        for (let i = 0; i < points.length; i++) {
+          ctx1.lineTo(getCanvasX(points[i].s), getCanvasY(points[i].pnl));
+        }
+        ctx1.lineTo(getCanvasX(points[points.length - 1].s), zeroY);
+        ctx1.closePath();
+
+        const grad = ctx1.createLinearGradient(0, margin.top, 0, margin.top + plotHeight);
+        grad.addColorStop(0, 'rgba(34, 197, 94, 0.12)');
+        grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.02)');
+        grad.addColorStop(1, 'rgba(239, 68, 68, 0.10)');
+        ctx1.fillStyle = grad;
+        ctx1.fill();
+        ctx1.restore();
+
+        // Main Payoff Curve (Blue Line)
+        ctx1.save();
+        ctx1.beginPath();
+        ctx1.strokeStyle = '#2563eb';
+        ctx1.lineWidth = 3;
+        ctx1.lineJoin = 'round';
+        ctx1.lineCap = 'round';
+
+        for (let i = 0; i < points.length; i++) {
+          const ptX = getCanvasX(points[i].s);
+          const ptY = getCanvasY(points[i].pnl);
+          if (i === 0) {
+            ctx1.moveTo(ptX, ptY);
+          } else {
+            ctx1.lineTo(ptX, ptY);
+          }
+        }
+        ctx1.stroke();
+        ctx1.restore();
+
+        // Breakeven Points (Red Dots & Labels)
+        breakevens.forEach((be, idx) => {
+          if (be >= minX && be <= maxX) {
+            const beX = getCanvasX(be);
+            const beY = getCanvasY(0);
+
+            ctx1.save();
+            ctx1.beginPath();
+            ctx1.setLineDash([2, 4]);
+            ctx1.strokeStyle = 'rgba(220, 38, 38, 0.35)';
+            ctx1.lineWidth = 1;
+            ctx1.moveTo(beX, margin.top);
+            ctx1.lineTo(beX, margin.top + plotHeight);
+            ctx1.stroke();
+            ctx1.restore();
+
+            ctx1.save();
+            ctx1.beginPath();
+            ctx1.fillStyle = '#dc2626';
+            ctx1.arc(beX, beY, 5.5, 0, Math.PI * 2);
+            ctx1.fill();
+            ctx1.strokeStyle = '#ffffff';
+            ctx1.lineWidth = 2;
+            ctx1.stroke();
+
+            ctx1.font = 'bold 11px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+            ctx1.fillStyle = '#b91c1c';
+            ctx1.textAlign = 'center';
+            const labelY = idx === 0 ? beY - 14 : beY + 18;
+            ctx1.fillText(`BE: $${be.toFixed(2)}`, beX, labelY);
+            ctx1.restore();
+          }
+        });
+
+        // Vertical Orange Dashed Marker at Selected Future Stock Price
+        if (futureS >= minX && futureS <= maxX) {
+          const futX = getCanvasX(futureS);
+          const futProfit = calculatePayoff(strategy, futureS, Kc, Kp, Pc, Pp);
+          const futY = getCanvasY(futProfit);
+
+          ctx1.save();
+          ctx1.beginPath();
+          ctx1.setLineDash([4, 4]);
+          ctx1.strokeStyle = '#ea580c';
+          ctx1.lineWidth = 2;
+          ctx1.moveTo(futX, margin.top);
+          ctx1.lineTo(futX, margin.top + plotHeight);
+          ctx1.stroke();
+          ctx1.restore();
+
+          ctx1.save();
+          ctx1.beginPath();
+          ctx1.fillStyle = '#ea580c';
+          ctx1.arc(futX, futY, 6, 0, Math.PI * 2);
+          ctx1.fill();
+          ctx1.strokeStyle = '#ffffff';
+          ctx1.lineWidth = 2;
+          ctx1.stroke();
+
+          const tagText = `S_T = $${futureS.toFixed(2)}`;
+          ctx1.font = 'bold 11px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+          const tagMetrics = ctx1.measureText(tagText);
+          const tagW = tagMetrics.width + 12;
+          const tagH = 20;
+          const tagX = Math.max(margin.left + tagW / 2, Math.min(margin.left + plotWidth - tagW / 2, futX));
+
+          ctx1.fillStyle = '#ea580c';
+          ctx1.beginPath();
+          ctx1.roundRect(tagX - tagW / 2, margin.top - 24, tagW, tagH, 4);
+          ctx1.fill();
+
+          ctx1.fillStyle = '#ffffff';
+          ctx1.textAlign = 'center';
+          ctx1.textBaseline = 'middle';
+          ctx1.fillText(tagText, tagX, margin.top - 14);
+
+          ctx1.fillStyle = '#9a3412';
+          ctx1.font = 'bold 11px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+          ctx1.textAlign = futX > displayWidth - 120 ? 'right' : 'left';
+          const offsetSignX = futX > displayWidth - 120 ? -10 : 10;
+          ctx1.fillText(formatMoney(futProfit, true), futX + offsetSignX, futY - 4);
+          ctx1.restore();
+        }
+
+        // Hover Crosshair & Tooltip
+        if (hoverX1 !== null && hoverX1 >= margin.left && hoverX1 <= margin.left + plotWidth) {
+          const hoveredPrice = getValFromCanvasX(hoverX1);
+          const hoveredPnl = calculatePayoff(strategy, hoveredPrice, Kc, Kp, Pc, Pp);
+          const canvasHoverY = getCanvasY(hoveredPnl);
+
+          ctx1.save();
+          ctx1.beginPath();
+          ctx1.setLineDash([2, 2]);
+          ctx1.strokeStyle = '#94a3b8';
+          ctx1.lineWidth = 1;
+          ctx1.moveTo(hoverX1, margin.top);
+          ctx1.lineTo(hoverX1, margin.top + plotHeight);
+          ctx1.stroke();
+
+          ctx1.beginPath();
+          ctx1.fillStyle = '#2563eb';
+          ctx1.arc(hoverX1, canvasHoverY, 4.5, 0, Math.PI * 2);
+          ctx1.fill();
+          ctx1.strokeStyle = '#ffffff';
+          ctx1.lineWidth = 1.5;
+          ctx1.stroke();
+          ctx1.restore();
+
+          tooltip1.style.display = 'block';
+          tooltip1.style.left = `${hoverX1}px`;
+          tooltip1.style.top = `${canvasHoverY}px`;
+          tooltip1.innerHTML = `Price: $${hoveredPrice.toFixed(2)}<br>P/L: <b>${formatMoney(hoveredPnl, true)}</b>`;
+        } else {
+          tooltip1.style.display = 'none';
+        }
+
+        ctx1.restore();
+      }
+
+      // --- Chart 2: Draw P/L vs Implied Volatility (1% to 200%) ---
+      function drawIVChart(strategy, fixedFutureS, currentS, Kc, Kp, selectedIV) {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas2.getBoundingClientRect();
+        const displayWidth = rect.width;
+        const displayHeight = rect.height;
+
+        if (canvas2.width !== displayWidth * dpr || canvas2.height !== displayHeight * dpr) {
+          canvas2.width = displayWidth * dpr;
+          canvas2.height = displayHeight * dpr;
+        }
+
+        ctx2.save();
+        ctx2.scale(dpr, dpr);
+        ctx2.clearRect(0, 0, displayWidth, displayHeight);
+
+        const margin = { top: 32, right: 36, bottom: 44, left: 64 };
+        const plotWidth = displayWidth - margin.left - margin.right;
+        const plotHeight = displayHeight - margin.top - margin.bottom;
+
+        // X Range: IV from 1% to 200%
+        const minIV = 1;
+        const maxIV = 200;
+
+        // Sample points across IV range
+        const points = [];
+        const numSteps = 200;
+        let minY = 0;
+        let maxY = 0;
+        let breakevenIV = null;
+
+        for (let i = 0; i <= numSteps; i++) {
+          const iv = minIV + (i / numSteps) * (maxIV - minIV);
+          const pnl = calculatePnlAtIV(strategy, fixedFutureS, currentS, Kc, Kp, iv);
+          points.push({ iv, pnl });
+
+          if (pnl < minY) minY = pnl;
+          if (pnl > maxY) maxY = pnl;
+
+          if (i > 0) {
+            const prev = points[i - 1];
+            if ((prev.pnl <= 0 && pnl >= 0) || (prev.pnl >= 0 && pnl <= 0)) {
+              const frac = Math.abs(prev.pnl) / (Math.abs(prev.pnl) + Math.abs(pnl) || 1);
+              breakevenIV = prev.iv + frac * (iv - prev.iv);
+            }
+          }
+        }
+
+        const absExtent = Math.max(Math.abs(minY), Math.abs(maxY), 5);
+        minY = -absExtent * 1.15;
+        maxY = absExtent * 1.15;
+
+        function getCanvasX(iv) {
+          return margin.left + ((iv - minIV) / (maxIV - minIV)) * plotWidth;
+        }
+
+        function getCanvasY(pnl) {
+          return margin.top + ((maxY - pnl) / (maxY - minY)) * plotHeight;
+        }
+
+        function getValFromCanvasX(x) {
+          const clampedX = Math.max(margin.left, Math.min(margin.left + plotWidth, x));
+          return minIV + ((clampedX - margin.left) / plotWidth) * (maxIV - minIV);
+        }
+
+        // Gridlines & Ticks
+        ctx2.strokeStyle = '#f1f5f9';
+        ctx2.lineWidth = 1;
+        ctx2.fillStyle = '#64748b';
+        ctx2.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx2.textAlign = 'right';
+        ctx2.textBaseline = 'middle';
+
+        const yTicks = 5;
+        for (let i = 0; i <= yTicks; i++) {
+          const yVal = minY + (i / yTicks) * (maxY - minY);
+          const yPos = getCanvasY(yVal);
+
+          ctx2.beginPath();
+          ctx2.strokeStyle = '#f1f5f9';
+          ctx2.moveTo(margin.left, yPos);
+          ctx2.lineTo(margin.left + plotWidth, yPos);
+          ctx2.stroke();
+
+          const label = (yVal >= 0 ? '+$' : '-$') + Math.abs(Math.round(yVal));
+          ctx2.fillText(label, margin.left - 10, yPos);
+        }
+
+        ctx2.textAlign = 'center';
+        ctx2.textBaseline = 'top';
+        const xTicks = [1, 25, 50, 75, 100, 125, 150, 175, 200];
+        xTicks.forEach(ivTick => {
+          const xPos = getCanvasX(ivTick);
+          ctx2.beginPath();
+          ctx2.strokeStyle = '#f1f5f9';
+          ctx2.moveTo(xPos, margin.top);
+          ctx2.lineTo(xPos, margin.top + plotHeight);
+          ctx2.stroke();
+
+          ctx2.fillText(`${ivTick}%`, xPos, margin.top + plotHeight + 8);
+        });
+
+        // Axis Titles
+        ctx2.fillStyle = '#334155';
+        ctx2.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx2.textAlign = 'center';
+        ctx2.fillText('Implied Volatility (IV %)', margin.left + plotWidth / 2, displayHeight - 16);
+
+        ctx2.save();
+        ctx2.translate(16, margin.top + plotHeight / 2);
+        ctx2.rotate(-Math.PI / 2);
+        ctx2.textAlign = 'center';
+        ctx2.fillText('Profit / Loss ($)', 0, 0);
+        ctx2.restore();
+
+        // Zero P/L Line
+        const zeroY = getCanvasY(0);
+        ctx2.save();
+        ctx2.beginPath();
+        ctx2.setLineDash([5, 5]);
+        ctx2.strokeStyle = '#94a3b8';
+        ctx2.lineWidth = 1.5;
+        ctx2.moveTo(margin.left, zeroY);
+        ctx2.lineTo(margin.left + plotWidth, zeroY);
+        ctx2.stroke();
+        ctx2.restore();
+
+        // Shaded Gradient under curve
+        ctx2.save();
+        ctx2.beginPath();
+        ctx2.moveTo(getCanvasX(points[0].iv), zeroY);
+        for (let i = 0; i < points.length; i++) {
+          ctx2.lineTo(getCanvasX(points[i].iv), getCanvasY(points[i].pnl));
+        }
+        ctx2.lineTo(getCanvasX(points[points.length - 1].iv), zeroY);
+        ctx2.closePath();
+
+        const grad = ctx2.createLinearGradient(0, margin.top, 0, margin.top + plotHeight);
+        grad.addColorStop(0, 'rgba(124, 58, 237, 0.12)');
+        grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.02)');
+        grad.addColorStop(1, 'rgba(239, 68, 68, 0.08)');
+        ctx2.fillStyle = grad;
+        ctx2.fill();
+        ctx2.restore();
+
+        // Main IV Sensitivity Curve (Purple)
+        ctx2.save();
+        ctx2.beginPath();
+        ctx2.strokeStyle = '#7c3aed';
+        ctx2.lineWidth = 3;
+        ctx2.lineJoin = 'round';
+        ctx2.lineCap = 'round';
+
+        for (let i = 0; i < points.length; i++) {
+          const ptX = getCanvasX(points[i].iv);
+          const ptY = getCanvasY(points[i].pnl);
+          if (i === 0) {
+            ctx2.moveTo(ptX, ptY);
+          } else {
+            ctx2.lineTo(ptX, ptY);
+          }
+        }
+        ctx2.stroke();
+        ctx2.restore();
+
+        // Breakeven IV Point (Red Dot & Label)
+        if (breakevenIV !== null && breakevenIV >= minIV && breakevenIV <= maxIV) {
+          const beX = getCanvasX(breakevenIV);
+          const beY = getCanvasY(0);
+
+          ctx2.save();
+          ctx2.beginPath();
+          ctx2.setLineDash([2, 4]);
+          ctx2.strokeStyle = 'rgba(220, 38, 38, 0.35)';
+          ctx2.lineWidth = 1;
+          ctx2.moveTo(beX, margin.top);
+          ctx2.lineTo(beX, margin.top + plotHeight);
+          ctx2.stroke();
+
+          ctx2.beginPath();
+          ctx2.fillStyle = '#dc2626';
+          ctx2.arc(beX, beY, 5.5, 0, Math.PI * 2);
+          ctx2.fill();
+          ctx2.strokeStyle = '#ffffff';
+          ctx2.lineWidth = 2;
+          ctx2.stroke();
+
+          ctx2.font = 'bold 11px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+          ctx2.fillStyle = '#b91c1c';
+          ctx2.textAlign = 'center';
+          ctx2.fillText(`BE IV: ${breakevenIV.toFixed(2)}%`, beX, beY - 14);
+          ctx2.restore();
+        }
+
+        // Vertical Orange Marker at Selected IV
+        if (selectedIV >= minIV && selectedIV <= maxIV) {
+          const curIVX = getCanvasX(selectedIV);
+          const curIVProfit = calculatePnlAtIV(strategy, fixedFutureS, currentS, Kc, Kp, selectedIV);
+          const curIVY = getCanvasY(curIVProfit);
+
+          ctx2.save();
+          ctx2.beginPath();
+          ctx2.setLineDash([4, 4]);
+          ctx2.strokeStyle = '#ea580c';
+          ctx2.lineWidth = 2;
+          ctx2.moveTo(curIVX, margin.top);
+          ctx2.lineTo(curIVX, margin.top + plotHeight);
+          ctx2.stroke();
+          ctx2.restore();
+
+          ctx2.save();
+          ctx2.beginPath();
+          ctx2.fillStyle = '#ea580c';
+          ctx2.arc(curIVX, curIVY, 6, 0, Math.PI * 2);
+          ctx2.fill();
+          ctx2.strokeStyle = '#ffffff';
+          ctx2.lineWidth = 2;
+          ctx2.stroke();
+
+          const tagText = `IV = ${selectedIV.toFixed(2)}%`;
+          ctx2.font = 'bold 11px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+          const tagMetrics = ctx2.measureText(tagText);
+          const tagW = tagMetrics.width + 12;
+          const tagH = 20;
+          const tagX = Math.max(margin.left + tagW / 2, Math.min(margin.left + plotWidth - tagW / 2, curIVX));
+
+          ctx2.fillStyle = '#ea580c';
+          ctx2.beginPath();
+          ctx2.roundRect(tagX - tagW / 2, margin.top - 24, tagW, tagH, 4);
+          ctx2.fill();
+
+          ctx2.fillStyle = '#ffffff';
+          ctx2.textAlign = 'center';
+          ctx2.textBaseline = 'middle';
+          ctx2.fillText(tagText, tagX, margin.top - 14);
+
+          ctx2.fillStyle = '#9a3412';
+          ctx2.font = 'bold 11px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+          ctx2.textAlign = curIVX > displayWidth - 120 ? 'right' : 'left';
+          const offsetSignX = curIVX > displayWidth - 120 ? -10 : 10;
+          ctx2.fillText(formatMoney(curIVProfit, true), curIVX + offsetSignX, curIVY - 4);
+          ctx2.restore();
+        }
+
+        // Interactive Hover Tooltip for IV chart
+        if (hoverX2 !== null && hoverX2 >= margin.left && hoverX2 <= margin.left + plotWidth) {
+          const hoveredIV = getValFromCanvasX(hoverX2);
+          const hoveredPnl = calculatePnlAtIV(strategy, fixedFutureS, currentS, Kc, Kp, hoveredIV);
+          const canvasHoverY = getCanvasY(hoveredPnl);
+
+          const { callPrice, putPrice } = calculateBSPremiums(currentS, Kc, Kp, hoveredIV, T_EXPIRY, RISK_FREE_RATE);
+
+          ctx2.save();
+          ctx2.beginPath();
+          ctx2.setLineDash([2, 2]);
+          ctx2.strokeStyle = '#94a3b8';
+          ctx2.lineWidth = 1;
+          ctx2.moveTo(hoverX2, margin.top);
+          ctx2.lineTo(hoverX2, margin.top + plotHeight);
+          ctx2.stroke();
+
+          ctx2.beginPath();
+          ctx2.fillStyle = '#7c3aed';
+          ctx2.arc(hoverX2, canvasHoverY, 4.5, 0, Math.PI * 2);
+          ctx2.fill();
+          ctx2.strokeStyle = '#ffffff';
+          ctx2.lineWidth = 1.5;
+          ctx2.stroke();
+          ctx2.restore();
+
+          tooltip2.style.display = 'block';
+          tooltip2.style.left = `${hoverX2}px`;
+          tooltip2.style.top = `${canvasHoverY}px`;
+          tooltip2.innerHTML = `IV: ${hoveredIV.toFixed(2)}%<br>P/L: <b>${formatMoney(hoveredPnl, true)}</b><br><span style="font-size:0.7rem;color:#cbd5e1;">Premiums: $${(callPrice + putPrice).toFixed(2)}</span>`;
+        } else {
+          tooltip2.style.display = 'none';
+        }
+
+        ctx2.restore();
+      }
+
+      // Synchronize all text boxes from slider values (everything strictly uses .toFixed(2), never Math.round or .toFixed(0))
+      function syncInputsFromSliders() {
+        const pairs = [
+          { input: currentPriceInput, slider: currentPriceSlider },
+          { input: ivInput, slider: ivSlider },
+          { input: futurePriceInput, slider: futurePriceSlider },
+          { input: callStrikeInput, slider: callStrikeSlider },
+          { input: putStrikeInput, slider: putStrikeSlider },
+          { input: callPremiumInput, slider: callPremiumSlider },
+          { input: putPremiumInput, slider: putPremiumSlider }
+        ];
+
+        pairs.forEach(({ input, slider }) => {
+          if (!input || !slider) return;
+          const curVal = parseFloat(slider.value);
+          const hasChanged = slider._lastVal === undefined || Math.abs(slider._lastVal - curVal) > 0.0001;
+          const isNotFocused = document.activeElement !== input;
+
+          if (isNotFocused && hasChanged) {
+            input.value = curVal.toFixed(2);
+            slider._lastVal = curVal;
+          }
+        });
+      }
+
+      // Master Render Function
+      function render() {
+        const strategy = strategySelect.value;
+        const currentS = parseFloat(currentPriceSlider.value) || 0;
+        const futureS = parseFloat(futurePriceSlider.value) || 0;
+        const Kc = parseFloat(callStrikeSlider.value) || 0;
+        const Kp = parseFloat(putStrikeSlider.value) || 0;
+        const Pc = parseFloat(callPremiumSlider.value) || 0;
+        const Pp = parseFloat(putPremiumSlider.value) || 0;
+        const iv = parseFloat(ivSlider.value) || 1;
+
+        // Keep text boxes in sync with sliders
+        syncInputsFromSliders();
+
+        const ivValEl = document.getElementById('ivVal');
+        if (ivValEl) {
+          ivValEl.textContent = `${iv.toFixed(2)}%`;
+        }
+
+        if (ivChartPriceTag) {
+          ivChartPriceTag.textContent = `$${futureS.toFixed(2)}`;
+        }
+
+        // Calculate Breakevens on price
+        const breakevens = getBreakevens(strategy, Kc, Kp, Pc, Pp);
+
+        // Update Stats Panel
+        updateStats(strategy, currentS, futureS, Kc, Kp, Pc, Pp, breakevens);
+
+        // Render Chart 1: Expiry Payoff Curve
+        drawPayoffChart(strategy, currentS, futureS, Kc, Kp, Pc, Pp, breakevens);
+
+        // Render Chart 2: P/L as a function of IV using Black-Scholes calculated premiums
+        drawIVChart(strategy, futureS, currentS, Kc, Kp, iv);
+      }
+
+      function setActiveScenarioButton(btn) {
+        allScenarioBtns.forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+      }
+
+      // --- Setup Event Listeners for All 7 Text Input Boxes ---
+      // Captures exact typed decimal values without unwanted rounding, updates slider exactly, and recalculates Black-Scholes premiums
+      function setupTextInputBox(inputEl, sliderEl, isStockPriceOrIVOrStrike) {
+        if (!inputEl || !sliderEl) return;
+
+        function handleValueUpdate(e) {
+          const isChange = e.type === 'change';
+          const raw = inputEl.value.trim().replace(/^\$/, '').replace(/%$/, '');
+
+          if (raw === '') {
+            if (isChange) {
+              const curSliderVal = parseFloat(sliderEl.value) || 0;
+              inputEl.value = curSliderVal.toFixed(2);
+            }
+            return;
+          }
+
+          const num = parseFloat(raw);
+          if (isNaN(num) || !isFinite(num)) {
+            if (isChange) {
+              const curSliderVal = parseFloat(sliderEl.value) || 0;
+              inputEl.value = curSliderVal.toFixed(2);
+            }
+            return;
+          }
+
+          const min = parseFloat(sliderEl.min);
+          let max = parseFloat(sliderEl.max);
+
+          // If typed value exceeds current slider max, adjust slider max so it is never truncated
+          if (!isNaN(max) && num > max) {
+            max = Math.max(max, Math.ceil(num * 1.25));
+            sliderEl.max = max.toString();
+          }
+
+          let clamped = num;
+          if (!isNaN(min) && clamped < min) clamped = min;
+          if (!isNaN(max) && clamped > max) clamped = max;
+
+          // Update slider value with the exact decimal number
+          const clampedStr = clamped.toString();
+          sliderEl.value = clampedStr;
+          sliderEl.setAttribute('value', clampedStr);
+          sliderEl.defaultValue = clampedStr;
+          sliderEl._lastVal = clamped;
+
+          setActiveScenarioButton(null);
+
+          // If input is stock price, IV, or a strike, recalculate Black-Scholes
+          if (isStockPriceOrIVOrStrike) {
+            if (sliderEl === currentPriceSlider) {
+              updateFuturePriceBounds();
+              const strategy = strategySelect.value;
+              const S = clamped;
+              if (strategy === 'long-straddle' || strategy === 'short-straddle') {
+                callStrikeSlider.value = S.toString();
+                callStrikeSlider.setAttribute('value', S.toString());
+                callStrikeSlider._lastVal = S;
+
+                putStrikeSlider.value = S.toString();
+                putStrikeSlider.setAttribute('value', S.toString());
+                putStrikeSlider._lastVal = S;
+
+                if (callStrikeInput && document.activeElement !== callStrikeInput) {
+                  callStrikeInput.value = S.toFixed(2);
+                }
+                if (putStrikeInput && document.activeElement !== putStrikeInput) {
+                  putStrikeInput.value = S.toFixed(2);
+                }
+              }
+            }
+            updatePremiumsFromIV();
+          }
+
+          // Call render() to redraw both charts
+          render();
+
+          // On blur or Enter (change event), preserve exact typed input if valid or clamped
+          if (isChange) {
+            if (clamped !== num) {
+              inputEl.value = clamped.toString();
+            }
+          }
+        }
+
+        // Listen on input (while typing - retains exact decimals like 72.61, 112.5)
+        inputEl.addEventListener('input', handleValueUpdate);
+
+        // Listen on change (on blur / Enter)
+        inputEl.addEventListener('change', handleValueUpdate);
+
+        // On Enter key press, blur to finish editing
+        inputEl.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            inputEl.blur();
+          }
+        });
+
+        // When the slider moves, update the text box value with 2 decimals
+        sliderEl.addEventListener('input', () => {
+          const val = parseFloat(sliderEl.value);
+          sliderEl._lastVal = val;
+          if (document.activeElement !== inputEl) {
+            inputEl.value = val.toFixed(2);
+          }
+        });
+      }
+
+      // Initialize sync for all 7 text input boxes:
+      setupTextInputBox(currentPriceInput, currentPriceSlider, true);
+      setupTextInputBox(ivInput, ivSlider, true);
+      if (ivInput) {
+        Object.defineProperty(ivInput, 'textContent', {
+          get() {
+            const num = parseFloat(this.value);
+            return isNaN(num) ? this.value : `${num.toFixed(2)}%`;
+          },
+          set() {},
+          configurable: true
+        });
+      }
+      setupTextInputBox(futurePriceInput, futurePriceSlider, false);
+      setupTextInputBox(callStrikeInput, callStrikeSlider, true);
+      setupTextInputBox(putStrikeInput, putStrikeSlider, true);
+      setupTextInputBox(callPremiumInput, callPremiumSlider, false);
+      setupTextInputBox(putPremiumInput, putPremiumSlider, false);
+
+      // --- Scenario Event Handlers ---
+      btnScenarioMyEvent.addEventListener('click', () => {
+        setActiveScenarioButton(btnScenarioMyEvent);
+        strategySelect.value = 'long-straddle';
+        currentPriceSlider.value = '100.00';
+        updateFuturePriceBounds();
+        futurePriceSlider.value = '108.00'; // 8% post-event move
+        callStrikeSlider.value = '100.00';
+        putStrikeSlider.value = '100.00';
+        ivSlider.value = '45.00'; // 45% event IV
+
+        updatePremiumsFromIV();
+        onStrategyChange(false);
+        render();
+      });
+
+      btnScenarioHighIV.addEventListener('click', () => {
+        setActiveScenarioButton(btnScenarioHighIV);
+        strategySelect.value = 'long-straddle';
+        currentPriceSlider.value = '100.00';
+        updateFuturePriceBounds();
+        futurePriceSlider.value = '100.00';
+        callStrikeSlider.value = '100.00';
+        putStrikeSlider.value = '100.00';
+        ivSlider.value = '80.00';
+
+        updatePremiumsFromIV();
+        onStrategyChange(false);
+        render();
+      });
+
+      btnScenarioLowIV.addEventListener('click', () => {
+        setActiveScenarioButton(btnScenarioLowIV);
+        strategySelect.value = 'long-straddle';
+        currentPriceSlider.value = '100.00';
+        updateFuturePriceBounds();
+        futurePriceSlider.value = '100.00';
+        callStrikeSlider.value = '100.00';
+        putStrikeSlider.value = '100.00';
+        ivSlider.value = '20.00';
+
+        updatePremiumsFromIV();
+        onStrategyChange(false);
+        render();
+      });
+
+      btnScenarioVolCrush.addEventListener('click', () => {
+        setActiveScenarioButton(btnScenarioVolCrush);
+        strategySelect.value = 'long-straddle';
+        currentPriceSlider.value = '100.00';
+        updateFuturePriceBounds();
+        futurePriceSlider.value = '100.00';
+        callStrikeSlider.value = '100.00';
+        putStrikeSlider.value = '100.00';
+        ivSlider.value = '30.00'; // 80% -> 30% IV
+
+        updatePremiumsFromIV();
+        onStrategyChange(false);
+        render();
+      });
+
+      // --- Strategy Dropdown & Sliders Change Handlers ---
+      strategySelect.addEventListener('change', () => {
+        setActiveScenarioButton(null);
+        onStrategyChange(true);
+      });
+
+      currentPriceSlider.addEventListener('input', () => {
+        setActiveScenarioButton(null);
+        updateFuturePriceBounds();
+        const strategy = strategySelect.value;
+        const S = parseFloat(currentPriceSlider.value) || 0;
+        if (strategy === 'long-straddle' || strategy === 'short-straddle') {
+          callStrikeSlider.value = S.toFixed(2);
+          putStrikeSlider.value = S.toFixed(2);
+        }
+        updatePremiumsFromIV();
+        render();
+      });
+
+      ivSlider.addEventListener('input', () => {
+        setActiveScenarioButton(null);
+        updatePremiumsFromIV();
+        render();
+      });
+
+      futurePriceSlider.addEventListener('input', () => {
+        setActiveScenarioButton(null);
+        render();
+      });
+
+      callStrikeSlider.addEventListener('input', () => {
+        setActiveScenarioButton(null);
+        updatePremiumsFromIV();
+        render();
+      });
+
+      putStrikeSlider.addEventListener('input', () => {
+        setActiveScenarioButton(null);
+        updatePremiumsFromIV();
+        render();
+      });
+
+      callPremiumSlider.addEventListener('input', () => {
+        setActiveScenarioButton(null);
+        render();
+      });
+
+      putPremiumSlider.addEventListener('input', () => {
+        setActiveScenarioButton(null);
+        render();
+      });
+
+      // Reset Button
+      btnReset.addEventListener('click', () => {
+        setActiveScenarioButton(null);
+        strategySelect.value = 'long-straddle';
+        currentPriceSlider.value = '100.00';
+        ivSlider.value = '30.00';
+        updateFuturePriceBounds();
+        futurePriceSlider.value = '100.00';
+        callStrikeSlider.value = '100.00';
+        putStrikeSlider.value = '100.00';
+
+        onStrategyChange(true);
+      });
+
+      // Download Button
+      btnDownload.addEventListener('click', () => {
+        // Clone document and strip dev server scripts to produce a clean self-contained offline HTML file
+        const docClone = document.documentElement.cloneNode(true);
+        const scriptsToRemove = docClone.querySelectorAll('script[src*="vite"], script[src*="_aistudio"], #root');
+        scriptsToRemove.forEach(el => el.remove());
+
+        const htmlContent = '<!DOCTYPE html>\n' + docClone.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'option-payoff-simulator.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      // Canvas 1 Interactions (Payoff)
+      canvas1.addEventListener('mousemove', (e) => {
+        const rect = canvas1.getBoundingClientRect();
+        hoverX1 = e.clientX - rect.left;
+        hoverY1 = e.clientY - rect.top;
+        render();
+      });
+
+      canvas1.addEventListener('mouseleave', () => {
+        hoverX1 = null;
+        hoverY1 = null;
+        render();
+      });
+
+      canvas1.addEventListener('click', (e) => {
+        const rect = canvas1.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const margin = { left: 64, right: 36 };
+        const plotWidth = rect.width - margin.left - margin.right;
+        const currentS = parseFloat(currentPriceSlider.value) || 0;
+        const minX = 0;
+        const maxX = Math.max(10, currentS * 2);
+
+        if (clickX >= margin.left && clickX <= margin.left + plotWidth) {
+          const selectedPrice = minX + ((clickX - margin.left) / plotWidth) * (maxX - minX);
+          const clampedVal = Math.max(0, Math.min(maxX, Math.round(selectedPrice * 100) / 100));
+          futurePriceSlider.value = clampedVal.toFixed(2);
+          futurePriceSlider._lastVal = clampedVal;
+          if (futurePriceInput && document.activeElement !== futurePriceInput) {
+            futurePriceInput.value = clampedVal.toFixed(2);
+          }
+          render();
+        }
+      });
+
+      // Canvas 2 Interactions (IV Sensitivity)
+      canvas2.addEventListener('mousemove', (e) => {
+        const rect = canvas2.getBoundingClientRect();
+        hoverX2 = e.clientX - rect.left;
+        hoverY2 = e.clientY - rect.top;
+        render();
+      });
+
+      canvas2.addEventListener('mouseleave', () => {
+        hoverX2 = null;
+        hoverY2 = null;
+        render();
+      });
+
+      canvas2.addEventListener('click', (e) => {
+        const rect = canvas2.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const margin = { left: 64, right: 36 };
+        const plotWidth = rect.width - margin.left - margin.right;
+        const minIV = 1;
+        const maxIV = 200;
+
+        if (clickX >= margin.left && clickX <= margin.left + plotWidth) {
+          const selectedIV = minIV + ((clickX - margin.left) / plotWidth) * (maxIV - minIV);
+          const clampedIV = Math.max(minIV, Math.min(maxIV, Math.round(selectedIV * 100) / 100));
+          ivSlider.value = clampedIV.toFixed(2);
+          ivSlider._lastVal = clampedIV;
+          if (ivInput && document.activeElement !== ivInput) {
+            ivInput.value = clampedIV.toFixed(2);
+          }
+          updatePremiumsFromIV();
+          render();
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        render();
+      });
+
+      // Initial Bootstrap
+      [
+        currentPriceSlider,
+        ivSlider,
+        futurePriceSlider,
+        callStrikeSlider,
+        putStrikeSlider,
+        callPremiumSlider,
+        putPremiumSlider
+      ].forEach(slider => {
+        if (slider) {
+          slider._lastVal = parseFloat(slider.value);
+        }
+      });
+      updateFuturePriceBounds();
+      updatePremiumsFromIV();
+      onStrategyChange(false);
+      render();
+    })();
+  </script>
+  <script type="module" src="/src/main.tsx"></script>
+
+
+<span id="PING_CONTENT_PUSH_NOTIFICATION" style="display: none;"></span><span id="PING_IFRAME_FORM_DETECTION" style="display: none;"></span><grammarly-desktop-integration data-grammarly-shadow-root="true" style="visibility: visible !important;"></grammarly-desktop-integration></body></html>
